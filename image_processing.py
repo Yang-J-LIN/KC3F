@@ -27,3 +27,25 @@ def binarize(img):
         img_gray, 150, 255, cv.THRESH_BINARY, cv.THRESH_OTSU)
 
     return img_binary
+
+
+def image_process(img):
+    """ Binarizes and skeletonizes the image.
+
+    Args:
+        img
+    
+    Returns:
+        target_point
+    """
+    width = img.shape[1]
+    height = img.shape[0]
+    roi = img[int(height / 3 * 2):height, int(width / 5):int(width * 4 / 5)]
+    img_bin = binarize(roi)
+
+    ele = cv.getStructuringElement(cv.MORPH_ELLIPSE, (3, 3))
+    img_bin_rev = cv.morphologyEx(255 - img_bin, cv.MORPH_OPEN, ele)
+
+    skel = cv.ximgproc.thinning(img_bin_rev)
+
+    return skel  # for test
