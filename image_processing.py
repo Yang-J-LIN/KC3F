@@ -34,7 +34,7 @@ def image_process(img):
 
     Args:
         img
-    
+
     Returns:
         target_point
     """
@@ -49,3 +49,51 @@ def image_process(img):
     skel = cv.ximgproc.thinning(img_bin_rev)
 
     return skel  # for test
+
+
+def choose_target_point(skel):
+    """ Selects a target poitn from skeleton for pure pursuit.
+
+    Args:
+        skel: skeleton of trajectory.
+
+    Returns:
+        target_point: target point for pure pursuit.
+
+    """
+    width = skel.shape[1]
+    height = skel.shape[0]
+
+    img = np.zeros((height, width), dtype=np.uint8)
+
+    ellipse = cv.ellipse(img,
+                         center=(width // 2, height),
+                         axes=(width // 3, height // 2),
+                         angle=0,
+                         startAngle=180,
+                         endAngle=360,
+                         color=255,
+                         thickness=1)
+
+    img_points = np.bitwise_and(skel, ellipse)
+
+    _, contours, _ = cv.findContours(img_points,
+                                     mode=cv.RETR_EXTERNAL,
+                                     method=cv.CHAIN_APPROX_NONE)
+
+    discrete_points = []
+
+    for contour in contours:
+        if contour.size == 2:
+            discrete_points.append(np.squeeze(contour))
+        else:
+            pass
+
+    discrete_points = sorted(discrete_points,
+                             key=lambda x: (x[0] - width // 2)**2 +
+                                           (x[1] - height) ** 2)
+
+    if len(discrete_points) != 0:
+        return discrete_points[0]
+    else:
+        return [0, 0]

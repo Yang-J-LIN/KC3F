@@ -52,6 +52,8 @@ def cruise():
             #                       Start your code here                      #
             frame = cap.get_frame()
             skel = image_processing.image_process(frame)
+            target_point = image_processing.choose_target_point(skel)
+            print(target_point)
 
             if DEBUG:
                 cv.imshow("win", skel)
