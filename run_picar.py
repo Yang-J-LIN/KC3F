@@ -2,6 +2,7 @@
 
 import time
 
+import matplotlib.pyplot as plt 
 import numpy as np
 from cv2 import cv2 as cv
 
@@ -9,6 +10,10 @@ import driver
 
 import image_processing
 import camera_capturer
+
+DEBUG = True
+
+PERIOD = 1
 
 
 def cruise():
@@ -38,14 +43,23 @@ def cruise():
     # Initialize CameraCapturer and drive
     cap = camera_capturer.CameraCapturer("front")
     d = driver.driver()
-
+    last_time = time.time()
     while True:
-        start_time = time.time()
-        frame = cap.get_frame()
-        skel = image_processing.image_process(frame)
-        end_time = time.time()
-        print("Time: %fs" % (end_time - start_time))
-        time.sleep(1)
+        this_time = time.time()
+        if this_time - last_time > PERIOD:
+            last_time = this_time
+            # --------------------------------------------------------------- #
+            #                       Start your code here                      #
+            frame = cap.get_frame()
+            skel = image_processing.image_process(frame)
+
+            if DEBUG:
+                cv.imshow("win", skel)
+                cv.waitKey(500)
+
+            # --------------------------------------------------------------- #
+        else:
+            time.sleep(0.05)
 
 
 if __name__ == "__main__":
