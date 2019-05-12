@@ -24,7 +24,7 @@ def binarize(img):
         return None
     # Apply the threshold method. It can be improved by changing the arguments.
     _, img_binary = cv.threshold(
-        img_gray, 150, 255, cv.THRESH_BINARY, cv.THRESH_OTSU)
+        img_gray, 170, 255, cv.THRESH_OTSU)
 
     return img_binary
 
@@ -45,14 +45,22 @@ def image_process(img):
 
     ele = cv.getStructuringElement(cv.MORPH_ELLIPSE, (3, 3))
     img_bin_rev = cv.morphologyEx(255 - img_bin, cv.MORPH_OPEN, ele)
+    img_bin_rev = cv.medianBlur(img_bin_rev, 9)
 
     skel = cv.ximgproc.thinning(img_bin_rev)
 
-    return skel  # for test
+    # img_bin_rev[skel == 255] = 120
+    # cv.imshow("img", img_bin_rev)
+    # cv.waitKey(200)
+    return skel, img_bin_rev  # for test
 
 
 def choose_target_point(skel):
     """ Selects a target poitn from skeleton for pure pursuit.
+
+    Draws a ellipse and applies an and operation to the ellipse with the skel.
+    Then returns a point that has least distance with the center of the
+    ellipse.
 
     Args:
         skel: skeleton of trajectory.
@@ -83,6 +91,10 @@ def choose_target_point(skel):
 
     discrete_points = []
 
+    # cv.imshow("skel", skel)
+    # cv.imshow("img_points", img_points)
+    cv.waitKey(200)
+
     for contour in contours:
         if contour.size == 2:
             discrete_points.append(np.squeeze(contour))
@@ -94,6 +106,6 @@ def choose_target_point(skel):
                                            (x[1] - height) ** 2)
 
     if len(discrete_points) != 0:
-        return discrete_points[0]
+        return discrete_points[0], width, height
     else:
-        return [0, 0]
+        return [width // 2, 0], width, height

@@ -2,7 +2,6 @@
 
 import time
 
-import matplotlib.pyplot as plt 
 import numpy as np
 from cv2 import cv2 as cv
 
@@ -11,9 +10,9 @@ import driver
 import image_processing
 import camera_capturer
 
-DEBUG = True
+DEBUG = False
 
-PERIOD = 1
+PERIOD = 0.5  # the period of image caption, processing and sending signal
 
 
 def cruise():
@@ -41,8 +40,9 @@ def cruise():
     """
 
     # Initialize CameraCapturer and drive
-    cap = camera_capturer.CameraCapturer("front")
+    cap = camera_capturer.CameraCapturer("rear")
     d = driver.driver()
+    d.setStatus(motor=0.1, mode="speed")
     last_time = time.time()
     while True:
         this_time = time.time()
@@ -51,17 +51,34 @@ def cruise():
             # --------------------------------------------------------------- #
             #                       Start your code here                      #
             frame = cap.get_frame()
-            skel = image_processing.image_process(frame)
-            target_point = image_processing.choose_target_point(skel)
-            print(target_point)
+            start = time.time()
+            skel, _ = image_processing.image_process(frame)
+            target_point, w, _ = image_processing.choose_target_point(skel)
+            end = time.time()
+            print("Time of image processing:", end - start)
+
+            # If there is no target point found, set servo to 0; otherwise, set
+            # servo to the uniformed bias.
+            if target_point[0] == 0:
+                d.setStatus(servo=0)
+            else:
+                # The code below is very inelegant. Remember to modify it.
+                # 371 is the x value of actual middleline in frame.
+                # int(cap.width / 5) is the edge cut off when extracting the
+                # roi.
+                # 5 is the scale factor.
+                bias_uniformed = \
+                    - 5*(target_point[0] - (371 - int(cap.width / 5)))/w
+                d.setStatus(servo=bias_uniformed)
+            print(- (target_point[0] - (371 - int(cap.width / 5)))/w)
 
             if DEBUG:
-                cv.imshow("win", skel)
-                cv.waitKey(500)
+                cv.imshow("win", frame)
+                cv.waitKey(300)
 
             # --------------------------------------------------------------- #
         else:
-            time.sleep(0.05)
+            time.sleep(0.01)
 
 
 if __name__ == "__main__":
