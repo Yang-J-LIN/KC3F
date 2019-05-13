@@ -9,10 +9,20 @@ import driver
 
 import image_processing
 import camera_capturer
+import utils
 
-DEBUG = False
+DEBUG = True
 
 PERIOD = 0.5  # the period of image caption, processing and sending signal
+
+OFFSET = 371
+
+
+def cruise_control(bias, k_p=1, k_i=0, k_d=1):
+    """ Controls the picar on the mode of cruise
+
+    """
+    return 0
 
 
 def cruise():
@@ -44,33 +54,58 @@ def cruise():
     d = driver.driver()
     d.setStatus(motor=0.1, mode="speed")
     last_time = time.time()
+
+    target = OFFSET - int(cap.width / 5)
+
+    # Parameters of PID controller
+    kp = 3
+    ki = 0
+    kd = 0
+
+    # Initialize error to 0 for PID controller
+    error_i = 0
+    error = 0
+
     while True:
         this_time = time.time()
-        if this_time - last_time > PERIOD:
+        if this_time - last_time > PERIOD:  # Execute the code below every
+                                            # PERIOD time
             last_time = this_time
             # --------------------------------------------------------------- #
             #                       Start your code here                      #
+            
+            # Image processing. Outputs a target_point.
             frame = cap.get_frame()
             start = time.time()
             skel, _ = image_processing.image_process(frame)
-            target_point, w, _ = image_processing.choose_target_point(skel)
+            target_point, width, _ = image_processing.choose_target_point(skel)
             end = time.time()
-            print("Time of image processing:", end - start)
+            print("Time required for image processing:", end - start)
+
+            # Picar control
 
             # If there is no target point found, set servo to 0; otherwise, set
             # servo to the uniformed bias.
             if target_point[0] == 0:
+                servo = 0
                 d.setStatus(servo=0)
+                pass
             else:
-                # The code below is very inelegant. Remember to modify it.
-                # 371 is the x value of actual middleline in frame.
-                # int(cap.width / 5) is the edge cut off when extracting the
-                # roi.
-                # 5 is the scale factor.
-                bias_uniformed = \
-                    - 5*(target_point[0] - (371 - int(cap.width / 5)))/w
-                d.setStatus(servo=bias_uniformed)
-            print(- (target_point[0] - (371 - int(cap.width / 5)))/w)
+                # Update the PID error
+                error_p = (target_point[0] - target)/width
+                error_i += error_p
+                error_d = error_p - error
+                error = error_p
+
+                # PID controller
+                servo = utils.constrain(- kp*error_p
+                	                    - ki*error_i
+                	                    - kd*error_d,
+                	                    1, -1)
+
+                d.setStatus(servo=servo)
+
+            print(servo, error_p, error_i, error_d)
 
             if DEBUG:
                 cv.imshow("win", frame)

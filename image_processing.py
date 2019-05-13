@@ -40,18 +40,19 @@ def image_process(img):
     """
     width = img.shape[1]
     height = img.shape[0]
-    roi = img[int(height / 3 * 2):height, int(width / 5):int(width * 4 / 5)]
+    roi = img[int(height / 3 * 2):int(height / 10 * 9),
+              int(width / 5):int(width * 4 / 5)]
     img_bin = binarize(roi)
 
     ele = cv.getStructuringElement(cv.MORPH_ELLIPSE, (3, 3))
     img_bin_rev = cv.morphologyEx(255 - img_bin, cv.MORPH_OPEN, ele)
-    img_bin_rev = cv.medianBlur(img_bin_rev, 9)
+    img_bin_rev = cv.medianBlur(img_bin_rev, 11)
 
     skel = cv.ximgproc.thinning(img_bin_rev)
 
-    # img_bin_rev[skel == 255] = 120
-    # cv.imshow("img", img_bin_rev)
-    # cv.waitKey(200)
+    img_bin_rev[skel == 255] = 120
+    cv.imshow("img", img_bin_rev)
+    cv.waitKey(200)
     return skel, img_bin_rev  # for test
 
 
@@ -91,9 +92,13 @@ def choose_target_point(skel):
 
     discrete_points = []
 
-    # cv.imshow("skel", skel)
-    # cv.imshow("img_points", img_points)
-    cv.waitKey(200)
+    img_DEBUG = np.zeros((height, width, 3), dtype=np.uint8)
+
+    img_DEBUG[:, :, 0] = skel
+    img_DEBUG[:, :, 1] = img_points
+
+    # cv.imshow("img_DEBUG", img_DEBUG)
+    # cv.waitKey(200)
 
     for contour in contours:
         if contour.size == 2:
