@@ -50,9 +50,9 @@ def image_process(img):
 
     skel = cv.ximgproc.thinning(img_bin_rev)
 
-    img_bin_rev[skel == 255] = 120
-    cv.imshow("img", img_bin_rev)
-    cv.waitKey(200)
+    # img_bin_rev[skel == 255] = 120
+    # cv.imshow("img", img_bin_rev)
+    # cv.waitKey(200)
     return skel, img_bin_rev  # for test
 
 
@@ -111,6 +111,6 @@ def choose_target_point(skel):
                                            (x[1] - height) ** 2)
 
     if len(discrete_points) != 0:
-        return discrete_points[0], width, height
+        return discrete_points[0], width, height, img_DEBUG
     else:
-        return [width // 2, 0], width, height
+        return [width // 2, 0], width, height, img_DEBUG
