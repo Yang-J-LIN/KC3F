@@ -1,5 +1,6 @@
 from cv2 import cv2 as cv
 import numpy as np
+from skimage import morphology
 
 
 def binarize(img):
@@ -48,11 +49,13 @@ def image_process(img):
     img_bin_rev = cv.morphologyEx(255 - img_bin, cv.MORPH_OPEN, ele)
     img_bin_rev = cv.medianBlur(img_bin_rev, 11)
 
-    skel = cv.ximgproc.thinning(img_bin_rev)
+    # skel = cv.ximgproc.thinning(img_bin_rev)
+
+    skel = morphology.skeletonize(img_bin_rev//255).astype(np.uint8)*255
 
     # img_bin_rev[skel == 255] = 120
-    # cv.imshow("img", img_bin_rev)
-    # cv.waitKey(200)
+    # cv.imshow("skel", skel)
+    # cv.waitKey(10000)
     return skel, img_bin_rev  # for test
 
 
@@ -113,4 +116,4 @@ def choose_target_point(skel):
     if len(discrete_points) != 0:
         return discrete_points[0], width, height, img_DEBUG
     else:
-        return [width // 2, 0], width, height, img_DEBUG
+        return [371 - int(cap.width / 5), 0], width, height, img_DEBUG

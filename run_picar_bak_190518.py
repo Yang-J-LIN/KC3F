@@ -58,19 +58,15 @@ def cruise():
     target = OFFSET - int(cap.width / 5)
 
     # Parameters of PID controller
-    kp = 1.2
+    kp = 2.2
     ki = 0
-    kd = 0.3
+    kd = 0
 
     # Initialize error to 0 for PID controller
-    error_p = 0
     error_i = 0
-    error_d = 0
     error = 0
-    
-    servo = 0
+
     last_servo = 0
-    last_angle = 0
     
     try:
         while True:
@@ -91,10 +87,9 @@ def cruise():
 
                 if white_rate > 0.3:
                     print("stay", white_rate)
-                    d.setStatus(servo=last_servo, motor=0.3)
                     continue
 
-                target_point, width, _, img_DEBUG, angle = \
+                target_point, width, _, img_DEBUG = \
                     choose_target_point(skel, target)
                 end = time.time()
                 print("Time required for image processing:", end - start)
@@ -103,29 +98,12 @@ def cruise():
 
                 # If there is no target point found, set servo to 0; otherwise, set
                 # servo to the uniformed bias.
-
-                # if target_point[0] == 0:
-                #     servo = last_servo
-                #     pass
-                # else:
-                #     # Update the PID error
-                #     error_p = ((target_point[0] - target)/width)
-                #     error_i += error_p
-                #     error_d = error_p - error
-                #     error = error_p
-
-                #     # PID controller
-                #     servo = utils.constrain(- kp*error_p
-                #                             - ki*error_i
-                #                             - kd*error_d,
-                #                             1, -1)
-
-                if angle == 0:
-                    angle = last_angle
+                if target_point[0] == 0:
+                    servo = last_servo
                     pass
                 else:
                     # Update the PID error
-                    error_p = angle
+                    error_p = ((target_point[0] - target)/width)
                     error_i += error_p
                     error_d = error_p - error
                     error = error_p
@@ -136,7 +114,7 @@ def cruise():
                                             - kd*error_d,
                                             1, -1)
 
-                d.setStatus(servo=servo, motor=0.3)
+                d.setStatus(servo=servo)
                 last_servo = servo
 
                 print("servo: ", servo, "error_p: ", error_p)
@@ -175,12 +153,10 @@ def choose_target_point(skel, target):
     height = skel.shape[0]
 
     img = np.zeros((height, width), dtype=np.uint8)
-    
-    ellipse_a = width // 2
-    ellipse_b = height // 3
+
     ellipse = cv.ellipse(img,
-                         center=(target, height),
-                         axes=(ellipse_a, ellipse_b),
+                         center=(width // 2, height),
+                         axes=(width // 2, height // 2),
                          angle=0,
                          startAngle=180,
                          endAngle=360,
@@ -215,16 +191,11 @@ def choose_target_point(skel, target):
 
     discrete_points = sorted(discrete_points,
                              key=lambda x: np.abs(x[0] - target))
-    
-    if len(discrete_points) != 0:
-        px = discrete_points[0][0] - target
-        angle = np.arctan2(px, ellipse_a)
-        # angle = angle[0]
-        print("angle:", angle)
 
-        return discrete_points[0], width, height, img_DEBUG, angle
+    if len(discrete_points) != 0:
+        return discrete_points[0], width, height, img_DEBUG
     else:
-        return [0, 0], width, height, img_DEBUG, 0
+        return [0, 0], width, height, img_DEBUG
         # return [target, 0], width, height, img_DEBUG
 
 
