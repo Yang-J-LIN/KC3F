@@ -42,7 +42,7 @@ def image_process(img):
     width = img.shape[1]
     height = img.shape[0]
     roi = img[int(height / 3 * 2):int(height / 10 * 9),
-              int(width / 5):int(width * 4 / 5)]
+              0:width]
     img_bin = binarize(roi)
 
     ele = cv.getStructuringElement(cv.MORPH_ELLIPSE, (3, 3))
@@ -116,4 +116,4 @@ def choose_target_point(skel):
     if len(discrete_points) != 0:
         return discrete_points[0], width, height, img_DEBUG
     else:
-        return [371 - int(cap.width / 5), 0], width, height, img_DEBUG
+        return [371, 0], width, height, img_DEBUG

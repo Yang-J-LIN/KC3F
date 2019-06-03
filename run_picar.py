@@ -50,17 +50,17 @@ def cruise():
     """
 
     # Initialize CameraCapturer and drive
-    cap = camera_capturer.CameraCapturer("rear")
+    cap = camera_capturer.CameraCapturer("front")
     d = driver.driver()
-    d.setStatus(motor=0.3, servo=0, mode="speed")
+    d.setStatus(motor=0.2, servo=0, mode="speed")
     last_time = time.time()
 
-    target = OFFSET - int(cap.width / 5)
+    target = OFFSET #- int(cap.width / 5)
 
     # Parameters of PID controller
     kp = 1.2
     ki = 0
-    kd = 0.3
+    kd = 0.1
 
     # Initialize error to 0 for PID controller
     error_p = 0
@@ -71,6 +71,8 @@ def cruise():
     servo = 0
     last_servo = 0
     last_angle = 0
+
+    n = 0.2
     
     try:
         while True:
@@ -78,6 +80,12 @@ def cruise():
             if this_time - last_time > PERIOD:  # Execute the code below every
                                                 # PERIOD time
                 last_time = this_time
+
+
+                # d.setStatus(motor=0, servo=n, mode="speed")
+                # n = -n
+                # continue
+
                 # --------------------------------------------------------------- #
                 #                       Start your code here                      #
                 
@@ -91,13 +99,13 @@ def cruise():
 
                 if white_rate > 0.3:
                     print("stay", white_rate)
-                    d.setStatus(servo=last_servo, motor=0.3)
+                    d.setStatus(servo=last_servo)
                     continue
 
                 target_point, width, _, img_DEBUG, angle = \
                     choose_target_point(skel, target)
                 end = time.time()
-                print("Time required for image processing:", end - start)
+                # print("Time required for image processing:", end - start)
 
                 # Picar control
 
@@ -125,7 +133,7 @@ def cruise():
                     pass
                 else:
                     # Update the PID error
-                    error_p = angle
+                    error_p = angle #**(9/7)
                     error_i += error_p
                     error_d = error_p - error
                     error = error_p
@@ -136,18 +144,18 @@ def cruise():
                                             - kd*error_d,
                                             1, -1)
 
-                d.setStatus(servo=servo, motor=0.3)
+                d.setStatus(servo=servo)
                 last_servo = servo
 
-                print("servo: ", servo, "error_p: ", error_p)
+                # print("servo: ", servo, "error_p: ", error_p)
 
-                img_DEBUG[:, target] = 255
+                # img_DEBUG[:, target] = 255
 
-                if DEBUG:
-                    # cv.imshow("frame", frame)
-                    cv.imshow("img_bin_rev", img_bin_rev)
-                    cv.imshow("img_DEBUG", img_DEBUG)
-                    cv.waitKey(300)
+                # if DEBUG:
+                #     # cv.imshow("frame", frame)
+                #     cv.imshow("img_bin_rev", img_bin_rev)
+                #     cv.imshow("img_DEBUG", img_DEBUG)
+                #     cv.waitKey(300)
 
                 # --------------------------------------------------------------- #
             else:
