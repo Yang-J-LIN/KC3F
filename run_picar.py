@@ -52,10 +52,10 @@ def cruise():
     # Initialize CameraCapturer and drive
     cap = camera_capturer.CameraCapturer("front")
     d = driver.driver()
-    d.setStatus(motor=0.2, servo=0, mode="speed")
+    d.setStatus(motor=0.4, servo=0, mode="speed")
     last_time = time.time()
 
-    target = OFFSET #- int(cap.width / 5)
+    target = OFFSET  # -int(cap.width / 5)
 
     # Parameters of PID controller
     kp = 1.2
@@ -67,13 +67,13 @@ def cruise():
     error_i = 0
     error_d = 0
     error = 0
-    
+
     servo = 0
     last_servo = 0
     last_angle = 0
 
     n = 0.2
-    
+
     try:
         while True:
             this_time = time.time()
@@ -81,14 +81,13 @@ def cruise():
                                                 # PERIOD time
                 last_time = this_time
 
-
                 # d.setStatus(motor=0, servo=n, mode="speed")
                 # n = -n
                 # continue
 
-                # --------------------------------------------------------------- #
-                #                       Start your code here                      #
-                
+                # ----------------------------------------------------------- #
+                #                       Start your code here                  #
+
                 # Image processing. Outputs a target_point.
                 frame = cap.get_frame()
                 start = time.time()
@@ -105,35 +104,13 @@ def cruise():
                 target_point, width, _, img_DEBUG, angle = \
                     choose_target_point(skel, target)
                 end = time.time()
-                # print("Time required for image processing:", end - start)
-
-                # Picar control
-
-                # If there is no target point found, set servo to 0; otherwise, set
-                # servo to the uniformed bias.
-
-                # if target_point[0] == 0:
-                #     servo = last_servo
-                #     pass
-                # else:
-                #     # Update the PID error
-                #     error_p = ((target_point[0] - target)/width)
-                #     error_i += error_p
-                #     error_d = error_p - error
-                #     error = error_p
-
-                #     # PID controller
-                #     servo = utils.constrain(- kp*error_p
-                #                             - ki*error_i
-                #                             - kd*error_d,
-                #                             1, -1)
 
                 if angle == 0:
                     angle = last_angle
                     pass
                 else:
                     # Update the PID error
-                    error_p = angle #**(9/7)
+                    error_p = angle  # **(9/7)
                     error_i += error_p
                     error_d = error_p - error
                     error = error_p
@@ -157,7 +134,7 @@ def cruise():
                 #     cv.imshow("img_DEBUG", img_DEBUG)
                 #     cv.waitKey(300)
 
-                # --------------------------------------------------------------- #
+                # ----------------------------------------------------------- #
             else:
                 # time.sleep(0.01)
                 pass
@@ -183,7 +160,7 @@ def choose_target_point(skel, target):
     height = skel.shape[0]
 
     img = np.zeros((height, width), dtype=np.uint8)
-    
+
     ellipse_a = width // 2
     ellipse_b = height // 3
     ellipse = cv.ellipse(img,
@@ -207,8 +184,9 @@ def choose_target_point(skel, target):
 
     img_DEBUG[:, :, 0] = skel
     img_DEBUG[:, :, 1] = img_points
+    img_DEBUG[:, :, 2] = ellipse
 
-    # cv.imshow("img_DEBUG", img_DEBUG)
+    cv.imwrite("img_DEBUG_2.jpg", img_DEBUG)
     # cv.waitKey(200)
 
     for contour in contours:
@@ -223,7 +201,7 @@ def choose_target_point(skel, target):
 
     discrete_points = sorted(discrete_points,
                              key=lambda x: np.abs(x[0] - target))
-    
+
     if len(discrete_points) != 0:
         px = discrete_points[0][0] - target
         angle = np.arctan2(px, ellipse_a)

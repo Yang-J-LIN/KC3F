@@ -2,6 +2,8 @@ from cv2 import cv2 as cv
 import numpy as np
 from skimage import morphology
 
+DEBUG = False
+
 
 def binarize(img):
     """Binarize a grayscale image.
@@ -43,19 +45,25 @@ def image_process(img):
     height = img.shape[0]
     roi = img[int(height / 3 * 2):int(height / 10 * 9),
               0:width]
+
+    if DEBUG:
+        cv.imwrite("ROI.jpg", roi)
+
     img_bin = binarize(roi)
 
     ele = cv.getStructuringElement(cv.MORPH_ELLIPSE, (3, 3))
     img_bin_rev = cv.morphologyEx(255 - img_bin, cv.MORPH_OPEN, ele)
     img_bin_rev = cv.medianBlur(img_bin_rev, 11)
 
-    # skel = cv.ximgproc.thinning(img_bin_rev)
-
     skel = morphology.skeletonize(img_bin_rev//255).astype(np.uint8)*255
 
-    # img_bin_rev[skel == 255] = 120
-    # cv.imshow("skel", skel)
-    # cv.waitKey(10000)
+    img_bin_rev[skel == 255] = 120
+
+    if DEBUG:
+        cv.imwrite("img_bin_rev.jpg", img_bin_rev)
+        cv.imshow("skel", skel)
+        cv.waitKey(10000)
+
     return skel, img_bin_rev  # for test
 
 
@@ -100,7 +108,9 @@ def choose_target_point(skel):
     img_DEBUG[:, :, 0] = skel
     img_DEBUG[:, :, 1] = img_points
 
-    # cv.imshow("img_DEBUG", img_DEBUG)
+    if DEBUG:
+        cv.imwrite("img_DEBUG.jpg", img_DEBUG)
+
     # cv.waitKey(200)
 
     for contour in contours:

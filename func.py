@@ -2,7 +2,7 @@ import cv2 as cv
 import numpy as np
 from skimage import morphology,measure
 
-# 二值化处理
+# Binarize image
 # img = cv.imread("D:/KC3F/test.JPG")
 # img_gray = cv.imread("D:/KC3F/test2.jpg",0)
 # img_gray = cv.resize(img_gray,(1080,604))
